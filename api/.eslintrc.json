@@ -1,0 +1,51 @@
+// .eslintrc.json
+{
+  "root": true,
+  "env": {
+    "node": true,
+    "es2022": true
+  },
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:@typescript-eslint/recommended-requiring-type-checking",
+    "prettier" // Ensures Prettier and ESLint don't conflict
+  ],
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaVersion": "latest",
+    "sourceType": "module",
+    "project": ["./tsconfig.json"]
+  },
+  "plugins": [
+    "@typescript-eslint"
+  ],
+  "rules": {
+    // General ESLint rules
+    "indent": ["error", 2, { "SwitchCase": 1 }],
+    "linebreak-style": ["error", "unix"],
+    "quotes": ["error", "single"],
+    "semi": ["error", "always"],
+    "no-console": "warn", // Warns about console.log
+    "no-unused-vars": "off", // Handled by @typescript-eslint/no-unused-vars
+
+    // TypeScript-specific rules
+    "@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }], // Warns about unused variables, ignoring those starting with _
+    "@typescript-eslint/explicit-function-return-type": "off", // Can be set to "error" if strict return types are desired
+    "@typescript-eslint/no-explicit-any": "warn", // Warns about 'any' type usage
+    "@typescript-eslint/restrict-template-expressions": ["error", { "allowNumber": true, "allowBoolean": true }],
+    "@typescript-eslint/no-floating-promises": "error"
+  },
+  "overrides": [
+    {
+      "files": ["*.js"],
+      "rules": {
+        "@typescript-eslint/no-var-requires": "off" // Allow require in JS files
+      }
+    }
+  ],
+  "ignorePatterns": [
+    "dist/",
+    "node_modules/"
+  ]
+}

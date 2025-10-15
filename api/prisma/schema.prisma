@@ -1,0 +1,370 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/**
+ * User model to represent users in the system.
+ */
+
+enum Role {
+  CUSTOMER
+  ADMIN
+}
+
+model User {
+  id           String  @id @default(uuid()) @db.Uuid
+  email        String  @unique
+  name         String?
+  passwordHash String
+  role         Role    @default(CUSTOMER)
+
+  // Audit columns (per your preference)
+  creation_date    DateTime @default(now()) @db.Timestamptz(6)
+  creation_user_id String?  @db.Uuid
+  last_update      DateTime @updatedAt @db.Timestamptz(6) // note: Prisma requires non-null here
+  update_user_id   String?  @db.Uuid
+  delete_flag      Boolean  @default(false)
+  Cart             Cart[]
+  Profile          Profile?
+}
+
+/**
+ * Product model to represent products in the system.
+ */
+
+enum ProductAvailability {
+  IN_STOCK
+  OUT_OF_STOCK
+  PREORDER
+  DISCONTINUED
+}
+
+model Category {
+  id       String    @id @default(cuid())
+  name     String    @db.VarChar(120)
+  slug     String    @unique @db.VarChar(160) // e.g. "beauty"
+  isActive Boolean   @default(true)
+  products Product[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive])
+  @@index([slug])
+}
+
+model Brand {
+  id       String    @id @default(cuid())
+  name     String    @unique @db.VarChar(160)
+  slug     String    @unique @db.VarChar(160)
+  isActive Boolean   @default(true)
+  products Product[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive])
+  @@index([slug])
+}
+
+model Tag {
+  id       String       @id @default(cuid())
+  name     String       @unique @db.VarChar(120)
+  slug     String       @unique @db.VarChar(160)
+  isActive Boolean      @default(true)
+  products ProductTag[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Product {
+  id          String  @id @default(cuid())
+  sku         String  @unique @db.VarChar(64)
+  name        String  @db.VarChar(240)
+  slug        String  @unique @db.VarChar(260)
+  description String? @db.Text
+  options     Json?
+
+  price              Decimal  @db.Decimal(12, 2) // store as decimal to avoid float issues
+  discountPercentage Decimal? @db.Decimal(5, 2)
+  rating             Decimal? @db.Decimal(3, 2) // 0.00 - 5.00 (validate app-side)
+  stock              Int      @default(0)
+  currency           String   @default("USD") @db.VarChar(3)
+
+  // Physical attributes
+  weight Decimal? @db.Decimal(10, 2) // e.g. grams/kg per your convention
+  width  Decimal? @db.Decimal(10, 2)
+  height Decimal? @db.Decimal(10, 2)
+  depth  Decimal? @db.Decimal(10, 2)
+
+  availability         ProductAvailability @default(IN_STOCK)
+  warrantyInformation  String?             @db.Text
+  shippingInformation  String?             @db.Text
+  returnPolicy         String?             @db.Text
+  minimumOrderQuantity Int                 @default(1)
+
+  // Media
+  thumbnailUrl String?        @db.Text
+  images       ProductImage[]
+
+  // Relations
+  category   Category     @relation(fields: [categoryId], references: [id])
+  categoryId String
+  brand      Brand?       @relation(fields: [brandId], references: [id])
+  brandId    String?
+  tags       ProductTag[]
+  reviews    Review[]
+
+  // Extra metadata (if needed)
+  barcode   String? @db.VarChar(64)
+  qrCodeUrl String? @db.Text
+  meta      Json?
+
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([categoryId])
+  @@index([brandId])
+  @@index([price])
+  @@index([stock])
+  @@index([rating])
+  @@index([isActive])
+}
+
+model ProductImage {
+  id        String  @id @default(cuid())
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId String
+  url       String  @db.Text
+  isPrimary Boolean @default(false)
+  sortOrder Int     @default(0)
+
+  createdAt DateTime @default(now())
+
+  @@index([productId])
+  @@index([isPrimary, sortOrder])
+}
+
+model Review {
+  id            String   @id @default(cuid())
+  product       Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId     String
+  rating        Int      @db.SmallInt // validate 1..5 app-side
+  comment       String?  @db.Text
+  reviewerName  String   @db.VarChar(120)
+  reviewerEmail String   @db.VarChar(255)
+  date          DateTime @default(now())
+
+  createdAt DateTime @default(now())
+
+  @@index([productId])
+  @@index([rating])
+}
+
+model ProductTag {
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId String
+  tag       Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  tagId     String
+
+  @@id([productId, tagId])
+  @@index([tagId])
+}
+
+/**
+ * Cart and CartItem models to represent shopping carts.
+ */
+
+model Cart {
+  id       String  @id @default(uuid()) @db.Uuid
+  user     User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId   String? @db.Uuid
+  isActive Boolean @default(true)
+
+  // Relations
+  items CartItem[]
+
+  // Audit columns (your standard 5 fields)
+  creationDate   DateTime  @default(now()) @map("creation_date") @db.Timestamptz(6)
+  creationUserId String?   @map("creation_user_id") @db.Uuid
+  lastUpdate     DateTime  @updatedAt @map("last_update") @db.Timestamptz(6)
+  updateUserId   String?   @map("update_user_id") @db.Uuid
+  deleteFlag     Boolean   @default(false) @map("delete_flag")
+  Profile        Profile[]
+
+  @@index([userId], map: "idx_cart_user")
+  @@map("cart")
+}
+
+model CartItem {
+  id        String  @id @default(uuid()) @db.Uuid
+  cartId    String  @db.Uuid
+  productId String  @db.Text // NOTE: If Product.id is Int, change to Int and adjust relation below.
+  options   Json? // Optional: keep null if you don't support variants yet.
+  quantity  Int     @default(1)
+  unitPrice Decimal @db.Decimal(12, 2) // snapshot of effective price at add time
+
+  // Relations
+  cart Cart @relation(fields: [cartId], references: [id], onDelete: Cascade)
+
+  // Optional relation to Product (enable if Product.id type matches)
+  // product          Product @relation(fields: [productId], references: [id])
+
+  // Audit columns (your standard 5 fields)
+  creationDate   DateTime @default(now()) @map("creation_date") @db.Timestamptz(6)
+  creationUserId String?  @map("creation_user_id") @db.Uuid
+  lastUpdate     DateTime @updatedAt @map("last_update") @db.Timestamptz(6)
+  updateUserId   String?  @map("update_user_id") @db.Uuid
+  deleteFlag     Boolean  @default(false) @map("delete_flag")
+
+  @@unique([cartId, productId], map: "uq_cart_item_unique_line")
+  @@index([cartId], map: "idx_cart_item_cart")
+  @@index([productId], map: "idx_cart_item_product")
+  @@map("cart_item")
+}
+
+/**
+ * Profile and Address models to represent user profiles and their addresses.
+ */
+
+model Profile {
+  id     String @id @default(uuid()) @db.Uuid
+  userId String @unique @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Basic profile fields
+  displayName String? @db.Text
+  firstName   String? @db.Text
+  lastName    String? @db.Text
+  phone       String? @db.Text
+  avatarUrl   String? @db.Text
+
+  // Active cart shortcut (nullable)
+  activeCartId String? @db.Uuid
+  activeCart   Cart?   @relation(fields: [activeCartId], references: [id], onDelete: SetNull)
+
+  // Addresses (1..N)
+  addresses Address[]
+
+  // Audit columns
+  creationDate   DateTime @default(now()) @map("creation_date") @db.Timestamptz(6)
+  creationUserId String?  @map("creation_user_id") @db.Uuid
+  lastUpdate     DateTime @updatedAt @map("last_update") @db.Timestamptz(6)
+  updateUserId   String?  @map("update_user_id") @db.Uuid
+  deleteFlag     Boolean  @default(false) @map("delete_flag")
+
+  @@index([userId], map: "idx_profile_user")
+  @@index([activeCartId], map: "idx_profile_active_cart")
+  @@map("profile")
+}
+
+model Address {
+  id String @id @default(uuid()) @db.Uuid
+
+  profileId String  @db.Uuid
+  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  // Optional label like: "Home", "Office"...
+  label String? @db.Text
+
+  // Recipient/contact info
+  recipientName String? @db.Text
+  phone         String? @db.Text
+  company       String? @db.Text
+
+  // Address lines
+  line1       String  @db.Text
+  line2       String? @db.Text
+  city        String  @db.Text
+  state       String? @db.Text
+  postalCode  String? @db.Text
+  countryCode String  @db.VarChar(2) // ISO-3166-1 alpha-2 (e.g., "EG", "US")
+
+  // Defaults
+  isDefaultShipping Boolean @default(false) @map("is_default_shipping")
+  isDefaultBilling  Boolean @default(false) @map("is_default_billing")
+
+  // Geo (optional)
+  latitude  Decimal? @db.Decimal(10, 7)
+  longitude Decimal? @db.Decimal(10, 7)
+
+  // Audit columns
+  creationDate   DateTime @default(now()) @map("creation_date") @db.Timestamptz(6)
+  creationUserId String?  @map("creation_user_id") @db.Uuid
+  lastUpdate     DateTime @updatedAt @map("last_update") @db.Timestamptz(6)
+  updateUserId   String?  @map("update_user_id") @db.Uuid
+  deleteFlag     Boolean  @default(false) @map("delete_flag")
+
+  @@index([profileId], map: "idx_address_profile")
+  @@index([countryCode], map: "idx_address_country")
+  @@map("address")
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  COD
+  CARD
+}
+
+enum PaymentStatus {
+  UNPAID
+  PAID
+  FAILED
+  REFUNDED
+}
+
+model Order {
+  id              String        @id @default(cuid())
+  userId          String        @db.Uuid
+  status          OrderStatus   @default(PENDING)
+  paymentMethod   PaymentMethod @default(COD)
+  paymentStatus   PaymentStatus @default(UNPAID)
+  paymentRef      String?
+  currency        String        @default("EGP") @db.VarChar(3)
+  subtotal        Decimal       @db.Decimal(12, 2)
+  shippingCost    Decimal       @db.Decimal(12, 2)
+  tax             Decimal       @db.Decimal(12, 2)
+  total           Decimal       @db.Decimal(12, 2)
+  shippingAddress Json?
+  items           OrderItem[]
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([userId])
+  @@index([status])
+}
+
+model OrderItem {
+  id          String   @id @default(cuid())
+  orderId     String
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId   String
+  productName String
+  productSlug String?
+  quantity    Int
+  unitPrice   Decimal  @db.Decimal(12, 2)
+  lineTotal   Decimal  @db.Decimal(12, 2)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([orderId])
+  @@index([productId])
+}

@@ -1,0 +1,1167 @@
+openapi: 3.0.3
+info:
+  title: E-commerce API
+  version: "1.0.0"
+  description: |
+    HTTP API consumed by the React storefront. All responses follow the `{ "data": ... }` envelope on success and `{ "error": { message, status } }` on failure.
+servers:
+  - url: http://localhost:4000/api/v1
+    description: Local development
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    CartIdParam:
+      name: cartId
+      in: path
+      required: true
+      schema:
+        type: string
+        description: Cart identifier (UUID)
+    ItemIdParam:
+      name: itemId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    OrderIdParam:
+      name: orderId
+      in: path
+      required: true
+      schema:
+        type: string
+        description: Order identifier (Prisma cuid)
+    AddressIdParam:
+      name: addressId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            message:
+              type: string
+            status:
+              type: integer
+            path:
+              type: string
+            meta:
+              type: object
+          required:
+            - message
+            - status
+      required:
+        - error
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+        role:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+          nullable: true
+        updatedAt:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+        - id
+        - email
+        - name
+    AuthTokens:
+      type: object
+      properties:
+        accessToken:
+          type: string
+          description: Sent via `X-Access-Token` response header
+        refreshToken:
+          type: string
+          description: Delivered as `refresh_token` httpOnly cookie
+    AuthCredentials:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+      required:
+        - email
+        - password
+    RegisterBody:
+      allOf:
+        - $ref: '#/components/schemas/AuthCredentials'
+        - type: object
+          properties:
+            name:
+              type: string
+          required:
+            - name
+    AuthEnvelope:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            user:
+              $ref: '#/components/schemas/User'
+          required:
+            - user
+      required:
+        - data
+    OkEnvelope:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            ok:
+              type: boolean
+          required:
+            - ok
+      required:
+        - data
+    Product:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+          nullable: true
+        category:
+          type: string
+        price:
+          type: number
+          format: float
+        discountPercentage:
+          type: number
+          format: float
+          nullable: true
+        rating:
+          type: number
+          format: float
+          nullable: true
+        stock:
+          type: integer
+        brand:
+          type: string
+          nullable: true
+        sku:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        availabilityStatus:
+          type: string
+        thumbnail:
+          type: string
+          format: uri
+          nullable: true
+        images:
+          type: array
+          items:
+            type: string
+            format: uri
+      required:
+        - id
+        - title
+        - category
+        - price
+        - stock
+        - tags
+        - sku
+        - availabilityStatus
+        - images
+    ProductListResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/Product'
+            page:
+              type: integer
+            size:
+              type: integer
+            total:
+              type: integer
+            hasNext:
+              type: boolean
+          required:
+            - items
+            - page
+            - size
+            - total
+            - hasNext
+      required:
+        - data
+    CartItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        productId:
+          type: string
+        options:
+          type: string
+          nullable: true
+        quantity:
+          type: integer
+          minimum: 0
+        unitPrice:
+          type: number
+          format: float
+        totalPrice:
+          type: number
+          format: float
+      required:
+        - id
+        - productId
+        - quantity
+        - unitPrice
+        - totalPrice
+    Cart:
+      type: object
+      properties:
+        id:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CartItem'
+        itemsCount:
+          type: integer
+        subtotal:
+          type: number
+          format: float
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - items
+        - itemsCount
+        - subtotal
+        - createdAt
+        - updatedAt
+    CartEnvelope:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/Cart'
+      required:
+        - data
+    Profile:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        displayName:
+          type: string
+          nullable: true
+        firstName:
+          type: string
+          nullable: true
+        lastName:
+          type: string
+          nullable: true
+        phone:
+          type: string
+          nullable: true
+        avatarUrl:
+          type: string
+          format: uri
+          nullable: true
+        activeCart:
+          type: object
+          nullable: true
+          properties:
+            id:
+              type: string
+        addresses:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProfileAddress'
+      required:
+        - id
+        - userId
+        - addresses
+    ProfileAddress:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        label:
+          type: string
+          nullable: true
+        recipientName:
+          type: string
+          nullable: true
+        phone:
+          type: string
+          nullable: true
+        company:
+          type: string
+          nullable: true
+        line1:
+          type: string
+        line2:
+          type: string
+          nullable: true
+        city:
+          type: string
+        state:
+          type: string
+          nullable: true
+        postalCode:
+          type: string
+          nullable: true
+        countryCode:
+          type: string
+        isDefaultShipping:
+          type: boolean
+        isDefaultBilling:
+          type: boolean
+        latitude:
+          type: number
+          format: float
+          nullable: true
+        longitude:
+          type: number
+          format: float
+          nullable: true
+      required:
+        - id
+        - line1
+        - city
+        - countryCode
+        - isDefaultShipping
+        - isDefaultBilling
+    ProfileEnvelope:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/Profile'
+      required:
+        - data
+    Order:
+      type: object
+      properties:
+        id:
+          type: string
+        status:
+          type: string
+        paymentMethod:
+          type: string
+          enum: [COD, CARD]
+        paymentStatus:
+          type: string
+        subtotal:
+          type: number
+          format: float
+        shippingCost:
+          type: number
+          format: float
+        tax:
+          type: number
+          format: float
+        total:
+          type: number
+          format: float
+        currency:
+          type: string
+          example: EGP
+        createdAt:
+          type: string
+          format: date-time
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              productId:
+                type: string
+              productName:
+                type: string
+              productSlug:
+                type: string
+                nullable: true
+              quantity:
+                type: integer
+              unitPrice:
+                type: number
+                format: float
+              lineTotal:
+                type: number
+                format: float
+            required:
+              - productId
+              - productName
+              - quantity
+              - unitPrice
+              - lineTotal
+      required:
+        - id
+        - status
+        - paymentMethod
+        - paymentStatus
+        - subtotal
+        - shippingCost
+        - tax
+        - total
+        - currency
+        - createdAt
+        - items
+    OrderEnvelope:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/Order'
+      required:
+        - data
+    OrderListEnvelope:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            rows:
+              type: array
+              items:
+                $ref: '#/components/schemas/Order'
+            total:
+              type: integer
+            page:
+              type: integer
+            size:
+              type: integer
+            hasNext:
+              type: boolean
+          required:
+            - rows
+            - total
+            - page
+            - size
+            - hasNext
+      required:
+        - data
+paths:
+  /auth/register:
+    post:
+      summary: Register a new customer account
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterBody'
+      responses:
+        "201":
+          description: Registration succeeded
+          headers:
+            X-Access-Token:
+              schema:
+                type: string
+              description: Short-lived access token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthEnvelope'
+        "409":
+          description: Email already in use
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /auth/signin:
+    post:
+      summary: Authenticate an existing user
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthCredentials'
+      responses:
+        "200":
+          description: Signed in
+          headers:
+            X-Access-Token:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthEnvelope'
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /auth/refresh:
+    post:
+      summary: Refresh access token using the refresh cookie
+      tags: [Auth]
+      responses:
+        "200":
+          description: Access token rotated
+          headers:
+            X-Access-Token:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OkEnvelope'
+        "401":
+          description: Missing or invalid refresh token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /auth/logout:
+    post:
+      summary: Clear refresh cookie
+      tags: [Auth]
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OkEnvelope'
+  /products:
+    get:
+      summary: List products with optional filters
+      tags: [Products]
+      parameters:
+        - name: q
+          in: query
+          schema:
+            type: string
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: brand
+          in: query
+          schema:
+            type: string
+        - name: tagSlugs
+          in: query
+          schema:
+            type: string
+            description: Comma-separated tag slugs
+        - name: tagIds
+          in: query
+          schema:
+            type: string
+            description: Comma-separated tag ids
+        - name: minPrice
+          in: query
+          schema:
+            type: number
+        - name: maxPrice
+          in: query
+          schema:
+            type: number
+        - name: inStock
+          in: query
+          schema:
+            type: boolean
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: size
+          in: query
+          schema:
+            type: integer
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: [newest, price_asc, price_desc, rating_desc]
+      responses:
+        "200":
+          description: Product page
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductListResponse'
+  /products/{id}:
+    get:
+      summary: Fetch a product by id
+      tags: [Products]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Product found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Product'
+                required:
+                  - data
+        "404":
+          description: Product missing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /products/category/{category}:
+    get:
+      summary: List products by category
+      tags: [Products]
+      parameters:
+        - name: category
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: size
+          in: query
+          schema:
+            type: integer
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: [newest, price_asc, price_desc, rating_desc]
+      responses:
+        "200":
+          description: Product page
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductListResponse'
+  /products/brand/{brand}:
+    get:
+      summary: List products filtered by brand
+      tags: [Products]
+      parameters:
+        - name: brand
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: size
+          in: query
+          schema:
+            type: integer
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: [newest, price_asc, price_desc, rating_desc]
+      responses:
+        "200":
+          description: Product page
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductListResponse'
+  /products/tag/{tag}:
+    get:
+      summary: List products filtered by tag
+      tags: [Products]
+      parameters:
+        - name: tag
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: size
+          in: query
+          schema:
+            type: integer
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: [newest, price_asc, price_desc, rating_desc]
+      responses:
+        "200":
+          description: Product page
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductListResponse'
+  /cart/{cartId}/items:
+    post:
+      summary: Add or increment a product line in the cart
+      tags: [Cart]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CartIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                productId:
+                  type: string
+                quantity:
+                  type: integer
+                  minimum: 1
+                options:
+                  type: string
+                  nullable: true
+              required:
+                - productId
+                - quantity
+      responses:
+        "201":
+          description: Cart updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CartEnvelope'
+        "404":
+          description: Product not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /cart/{cartId}/items/{itemId}:
+    patch:
+      summary: Update cart line quantity
+      tags: [Cart]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CartIdParam'
+        - $ref: '#/components/parameters/ItemIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                quantity:
+                  type: integer
+                  minimum: 0
+              required:
+                - quantity
+      responses:
+        "200":
+          description: Cart updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CartEnvelope'
+    delete:
+      summary: Remove cart line
+      tags: [Cart]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CartIdParam'
+        - $ref: '#/components/parameters/ItemIdParam'
+      responses:
+        "200":
+          description: Cart updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CartEnvelope'
+  /cart/{cartId}/clear:
+    post:
+      summary: Remove all items from the cart
+      tags: [Cart]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CartIdParam'
+      responses:
+        "200":
+          description: Cart cleared
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CartEnvelope'
+  /orders/checkout:
+    post:
+      summary: Convert active cart into an order
+      tags: [Orders]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                shippingAddressId:
+                  type: string
+                  nullable: true
+                shippingAddress:
+                  type: object
+                  nullable: true
+                  properties:
+                    label:
+                      type: string
+                      nullable: true
+                    recipientName:
+                      type: string
+                    phone:
+                      type: string
+                      nullable: true
+                    company:
+                      type: string
+                      nullable: true
+                    line1:
+                      type: string
+                    line2:
+                      type: string
+                      nullable: true
+                    city:
+                      type: string
+                    state:
+                      type: string
+                      nullable: true
+                    postalCode:
+                      type: string
+                      nullable: true
+                    countryCode:
+                      type: string
+                    latitude:
+                      type: number
+                      format: float
+                      nullable: true
+                    longitude:
+                      type: number
+                      format: float
+                      nullable: true
+                  required:
+                    - line1
+                    - city
+                    - countryCode
+                paymentMethod:
+                  type: string
+                  enum: [COD, CARD]
+              anyOf:
+                - required: [shippingAddressId]
+                - required: [shippingAddress]
+              required:
+                - paymentMethod
+      responses:
+        "200":
+          description: Order created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderEnvelope'
+        "400":
+          description: Validation error (e.g. missing shipping address)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "403":
+          description: Address does not belong to user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /orders/orders:
+    get:
+      summary: List authenticated user's orders
+      tags: [Orders]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        "200":
+          description: Orders page
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderListEnvelope'
+  /orders/orders/{orderId}:
+    get:
+      summary: Fetch a specific order by id
+      tags: [Orders]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OrderIdParam'
+      responses:
+        "200":
+          description: Order details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderEnvelope'
+        "404":
+          description: Order not found for user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /profile:
+    get:
+      summary: Return current user's profile
+      tags: [Profile]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Profile data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileEnvelope'
+    patch:
+      summary: Update profile fields
+      tags: [Profile]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                displayName:
+                  type: string
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+                phone:
+                  type: string
+                avatarUrl:
+                  type: string
+                  format: uri
+      responses:
+        "200":
+          description: Updated profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileEnvelope'
+  /profile/init:
+    post:
+      summary: Initialise the profile + cart for user
+      tags: [Profile]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                displayName:
+                  type: string
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+                phone:
+                  type: string
+                avatarUrl:
+                  type: string
+                  format: uri
+      responses:
+        "200":
+          description: Profile initialised
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileEnvelope'
+  /profile/addresses:
+    post:
+      summary: Create a profile address
+      tags: [Profile]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                label:
+                  type: string
+                recipientName:
+                  type: string
+                phone:
+                  type: string
+                company:
+                  type: string
+                line1:
+                  type: string
+                line2:
+                  type: string
+                city:
+                  type: string
+                state:
+                  type: string
+                postalCode:
+                  type: string
+                countryCode:
+                  type: string
+                isDefaultShipping:
+                  type: boolean
+                isDefaultBilling:
+                  type: boolean
+                latitude:
+                  type: number
+                  format: float
+                longitude:
+                  type: number
+                  format: float
+              required:
+                - line1
+                - city
+                - countryCode
+      responses:
+        "201":
+          description: Address created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileEnvelope'
+  /profile/addresses/{addressId}:
+    patch:
+      summary: Update an address
+      tags: [Profile]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/AddressIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                label:
+                  type: string
+                recipientName:
+                  type: string
+                phone:
+                  type: string
+                company:
+                  type: string
+                line1:
+                  type: string
+                line2:
+                  type: string
+                city:
+                  type: string
+                state:
+                  type: string
+                postalCode:
+                  type: string
+                countryCode:
+                  type: string
+                isDefaultShipping:
+                  type: boolean
+                isDefaultBilling:
+                  type: boolean
+                latitude:
+                  type: number
+                  format: float
+                longitude:
+                  type: number
+                  format: float
+      responses:
+        "200":
+          description: Address updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileEnvelope'
+    delete:
+      summary: Soft delete an address
+      tags: [Profile]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/AddressIdParam'
+      responses:
+        "200":
+          description: Address removed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileEnvelope'
