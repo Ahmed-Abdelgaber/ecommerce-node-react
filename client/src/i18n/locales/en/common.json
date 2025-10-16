@@ -1,0 +1,99 @@
+{
+  "appName": "Ecommerce",
+  "language": {
+    "current": "English",
+    "switchToEnglish": "Switch to English",
+    "switchToArabic": "التبديل إلى العربية"
+  },
+  "theme": {
+    "light": "Light Mode",
+    "dark": "Dark Mode",
+    "switchToLight": "Switch to light mode",
+    "switchToDark": "Switch to dark mode"
+  },
+  "header": {
+    "searchPlaceholder": "Search for products, brands or categories",
+    "signIn": "Sign in",
+    "register": "Create account",
+    "cart": "Cart",
+    "categories": "Categories",
+    "allCategories": "All categories",
+    "profile": "My profile",
+    "settings": "Settings",
+    "logout": "Sign out"
+  },
+  "footer": {
+    "tagline": "Shop smarter. Live better.",
+    "copyright": "© {{year}} Ecommerce. All rights reserved."
+  },
+  "common": {
+    "loading": "Loading",
+    "viewAll": "View all",
+    "close": "Close",
+    "noResults": "No results yet",
+    "loadMore": "Load more",
+    "error": "Something went wrong. Please try again.",
+    "searchHint": "Start typing to explore products, categories, and brands."
+  },
+  "home": {
+    "hero": {
+      "tagline": "Curated for modern lifestyles",
+      "title": "Elevate your everyday shopping experience",
+      "subtitle": "Discover hand-picked collections, seasonal offers, and essentials tailored to the way you live—available in English and العربية.",
+      "searchPlaceholder": "Search for gadgets, fashion, decor...",
+      "ctaSearch": "Search",
+      "ctaBrowse": "Browse full catalog",
+      "deliveryTitle": "Express delivery",
+      "deliverySubtitle": "Free returns & secure checkout",
+      "trendingLabel": "Trending now:",
+      "trendingTags": ["smartphones", "laptops", "skincare", "furniture"],
+      "badgeNew": "New",
+      "featuredTitle": "Smart living bundle",
+      "featuredSubtitle": "Save up to 25% on connected devices built for your routine.",
+      "featuredCTA": "Shop collection"
+    },
+    "categories": {
+      "title": "Shop by category",
+      "subtitle": "Tap into curated collections—personalised for every style and season.",
+      "itemsLabel": "items"
+    },
+    "products": {
+      "title": "New & notable arrivals",
+      "subtitle": "Streamed directly from our marketplace—refresh for the latest drops.",
+      "viewAll": "View catalog",
+      "viewDetails": "View details",
+      "addToCart": "Add to cart",
+      "added": "Added to cart",
+      "inStock": "{{count}} in stock"
+    }
+  },
+  "search": {
+    "filters": {
+      "inStock": "In stock only",
+      "more": "More filters",
+      "reset": "Reset filters",
+      "priceRange": "${{min}} – ${{max}}",
+      "priceTitle": "Price range",
+      "any": "Any"
+    },
+    "sort": {
+      "newest": "Newest",
+      "price_asc": "Price: Low to High",
+      "price_desc": "Price: High to Low",
+      "rating_desc": "Top rated"
+    },
+    "resultsFor": "Results for \"{{query}}\"",
+    "discover": "Discover products",
+    "placeholder": "Results will appear here once implemented."
+  },
+  "product": {
+    "details": {
+      "placeholderTitle": "Product details coming soon",
+      "placeholderSubtitle": "Product ID: {{id}}"
+    }
+  },
+  "catalog": {
+    "title": "All products",
+    "subtitle": "Browse everything we offer in one place."
+  }
+}
