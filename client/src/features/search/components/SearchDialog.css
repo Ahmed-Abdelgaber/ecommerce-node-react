@@ -1,0 +1,92 @@
+.search-dialog .ant-modal-content {
+  border-radius: 24px;
+  border: 1px solid color-mix(in srgb, var(--color-outline) 65%, transparent);
+  box-shadow: var(--shadow-lg);
+  background: var(--color-bg-surface);
+}
+
+[data-theme="dark"] .search-dialog .ant-modal-content {
+  background: color-mix(in srgb, var(--color-bg-surface) 85%, transparent);
+  border-color: var(--color-outline-strong);
+}
+
+.search-dialog__title {
+  display: inline-flex;
+  gap: 0.6rem;
+  align-items: center;
+  font-size: 1rem;
+  color: var(--color-text-secondary);
+}
+
+.search-dialog__results {
+  margin-top: 1rem;
+  max-height: min(440px, 45vh);
+  overflow-y: auto;
+  padding-inline: 0.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.search-dialog__hint {
+  text-align: center;
+  color: var(--color-text-secondary);
+  margin: 1.5rem 0;
+  font-size: 0.95rem;
+}
+
+.search-dialog__item {
+  border-radius: var(--border-radius-md);
+  padding: 0.75rem 1rem;
+  background: color-mix(in srgb, var(--color-bg-surface) 92%, transparent);
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  transition:
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.search-dialog__item:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.search-dialog__meta {
+  color: var(--color-text-secondary);
+  font-size: 0.85rem;
+}
+
+.search-dialog__loading,
+.search-dialog__loadmore {
+  display: flex;
+  justify-content: center;
+  padding: 1rem 0;
+}
+
+.search-dialog__error {
+  margin-top: 0.5rem;
+  text-align: center;
+}
+
+.search-dialog__wrap .ant-input-affix-wrapper {
+  border-radius: var(--border-radius-lg);
+  border: 1px solid color-mix(in srgb, var(--color-outline) 70%, transparent);
+  margin-bottom: 1rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.search-dialog__wrap--rtl .ant-modal {
+  direction: rtl;
+}
+
+.search-dialog__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  justify-content: center;
+}
+
+.search-dialog__cta--rtl {
+  flex-direction: row-reverse;
+}

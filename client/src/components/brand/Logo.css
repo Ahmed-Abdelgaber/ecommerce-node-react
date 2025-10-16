@@ -1,0 +1,26 @@
+.logo__wrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  font-weight: 600;
+  font-size: 1.125rem;
+  color: var(--color-text-primary);
+  text-transform: lowercase;
+  letter-spacing: 0.04em;
+}
+
+.logo__image {
+  width: var(--logo-size, 48px);
+  height: var(--logo-size, 48px);
+  display: block;
+}
+
+.logo__text {
+  font-family: var(--font-family-display);
+  line-height: 1;
+  transition: color var(--transition-fast);
+}
+
+[data-theme="dark"] .logo__text {
+  color: var(--color-text-secondary);
+}

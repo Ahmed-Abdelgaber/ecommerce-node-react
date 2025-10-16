@@ -1,0 +1,33 @@
+.search-results {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.search-results__skeleton {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.5rem;
+}
+
+.search-results__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: clamp(1rem, 3vw, 1.75rem);
+}
+
+.search-results__sentinel {
+  display: flex;
+  justify-content: center;
+  padding: 1.5rem 0;
+}
+
+.product-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.25rem;
+  border-radius: clamp(16px, 3vw, 20px);
+  background: color-mix(in srgb, var(--color-bg-surface) 92%, transparent);
+  box-shadow: var(--shadow-sm);
+}

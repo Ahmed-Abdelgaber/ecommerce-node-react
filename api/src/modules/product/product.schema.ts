@@ -43,8 +43,8 @@ export const ListFiltersSchema = z
       z.array(z.string().trim().min(1)).optional()
     ),
 
-    minPrice: z.coerce.number().finite().nonnegative().optional(),
-    maxPrice: z.coerce.number().finite().nonnegative().optional(),
+    minPrice: z.coerce.number().nonnegative().optional(),
+    maxPrice: z.coerce.number().nonnegative().optional(),
 
     inStock: z.coerce.boolean().optional(),
 

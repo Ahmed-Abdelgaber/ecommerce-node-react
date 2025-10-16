@@ -1,0 +1,99 @@
+.categories-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.categories-section__header h2 {
+  margin: 0;
+  font-size: clamp(1.8rem, 3vw, 2.2rem);
+}
+
+.categories-section__header p {
+  margin: 0.35rem 0 0;
+  color: var(--color-text-secondary);
+}
+
+.categories-section__loading {
+  display: flex;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.categories-section__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: clamp(1rem, 2.5vw, 1.5rem);
+}
+
+.category-card {
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  text-align: inherit;
+}
+
+.category-card .ant-card {
+  height: 100%;
+  border-radius: clamp(18px, 3vw, 22px);
+  padding: 1.4rem 1.3rem;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto 1fr;
+  gap: 0.8rem 1rem;
+  background: color-mix(in srgb, var(--color-bg-surface) 95%, transparent);
+  box-shadow: var(--shadow-sm);
+  transition:
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.category-card:hover .ant-card {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+}
+
+.category-card__icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--color-primary) 20%, transparent);
+  display: grid;
+  place-content: center;
+  font-size: 1.4rem;
+  color: var(--color-primary-strong);
+}
+
+.category-card__content h3 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.category-card__content .ant-tag {
+  margin-top: 0.4rem;
+  display: inline-flex;
+  gap: 0.25rem;
+  align-items: center;
+}
+
+.category-card__image {
+  grid-column: 1 / -1;
+  border-radius: clamp(16px, 3vw, 20px);
+  overflow: hidden;
+  position: relative;
+  background: color-mix(in srgb, var(--color-secondary) 12%, transparent);
+}
+
+.category-card__image img {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  display: block;
+}
+
+@media (max-width: 768px) {
+  .categories-section__grid {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  }
+}
